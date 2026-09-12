@@ -58,7 +58,7 @@ import type {
   GridSnapshot,
   Point,
 } from './types';
-import { isGoal, nearestGoal, nearestGoalDist } from './utils';
+import { isGoal, nearestGoal, nearestGoalDist, neighbors } from './utils';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -69,29 +69,6 @@ import { isGoal, nearestGoal, nearestGoalDist } from './utils';
  */
 function asNumber(value: number | boolean | undefined, fallback: number): number {
   return typeof value === 'number' ? value : fallback;
-}
-
-/** Cardinal neighbor offsets (no diagonals). */
-const DIRS: readonly Point[] = [
-  { x: 0, y: -1 },
-  { x: 1, y: 0 },
-  { x: 0, y: 1 },
-  { x: -1, y: 0 },
-];
-
-/** Return walkable cardinal neighbors of `p` within `grid`. */
-function neighbors(p: Point, grid: GridSnapshot): Point[] {
-  const result: Point[] = [];
-  for (const d of DIRS) {
-    const nx = p.x + d.x;
-    const ny = p.y + d.y;
-    if (nx >= 0 && nx < grid.width && ny >= 0 && ny < grid.height) {
-      if (!grid.walls.has(`${nx},${ny}`)) {
-        result.push({ x: nx, y: ny });
-      }
-    }
-  }
-  return result;
 }
 
 /** Total traversal cost of `path` (default cost per step is 1). */

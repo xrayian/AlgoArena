@@ -48,8 +48,8 @@ export interface AlgorithmEntry {
 export const ALGORITHMS: Record<string, AlgorithmEntry> = {
   astar:     { label: 'A*',                  color: '#C91A09', factory: aStarSearch,              implemented: true },
   bfs:       { label: 'BFS',                 color: '#F2CD37', factory: breadthFirstSearch,       implemented: true },
-  dijkstra:  { label: "Dijkstra's",          color: '#0055BF', factory: dijkstraFactory,          implemented: false },
-  dfs:       { label: 'DFS',                 color: '#4B9F4A', factory: dfsFactory,               implemented: false },
+  dijkstra:  { label: "Dijkstra's",          color: '#0055BF', factory: dijkstraFactory,          implemented: true },
+  dfs:       { label: 'DFS',                 color: '#4B9F4A', factory: dfsFactory,               implemented: true },
   greedy:    { label: 'Greedy Best-First',   color: '#FE8A18', factory: greedyBestFirstFactory,   implemented: true },
   hillclimb: { label: 'Hill Climbing',       color: '#923978', factory: hillClimbingFactory,      implemented: true },
   annealing: { label: 'Simulated Annealing', color: '#36AEBF', factory: simulatedAnnealingFactory, implemented: true },

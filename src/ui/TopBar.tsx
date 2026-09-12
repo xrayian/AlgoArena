@@ -38,8 +38,8 @@ const RACER_CHIPS = [
   { key: 'bfs', short: 'BFS', label: 'Breadth-First', color: '#F2CD37' },
   { key: 'dfs', short: 'DFS', label: 'Depth-First', color: '#4B9F4A' },
   { key: 'greedy', short: 'Gdy', label: 'Greedy Best-First', color: '#FE8A18' },
-  { key: 'hillClimbing', short: 'Hill', label: 'Hill Climbing', color: '#923978' },
-  { key: 'simulatedAnnealing', short: 'SA', label: 'Simulated Annealing', color: '#36AEBF' },
+  { key: 'hillclimb', short: 'Hill', label: 'Hill Climbing', color: '#923978' },
+  { key: 'annealing', short: 'SA', label: 'Simulated Annealing', color: '#36AEBF' },
 ] as const;
 
 interface TopBarProps {

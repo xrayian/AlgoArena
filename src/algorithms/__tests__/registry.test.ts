@@ -37,6 +37,7 @@ describe('Algorithm Registry', () => {
   it('getImplementedAlgorithms should return only implemented ones', () => {
     const impl = getImplementedAlgorithms();
     const keys = Object.keys(impl);
+    expect(keys).toHaveLength(9);
     expect(keys).toContain('astar');
     expect(keys).toContain('bfs');
     expect(keys).toContain('greedy');
@@ -44,15 +45,15 @@ describe('Algorithm Registry', () => {
     expect(keys).toContain('bidir-astar');
     expect(keys).toContain('hillclimb');
     expect(keys).toContain('annealing');
-    // The rest are TODO
-    expect(keys).not.toContain('dijkstra');
-    expect(keys).not.toContain('dfs');
+    expect(keys).toContain('dijkstra');
+    expect(keys).toContain('dfs');
   });
 
   it('getTodoAlgorithms should return unimplemented algorithm keys', () => {
     const todos = getTodoAlgorithms();
-    expect(todos).toContain('dijkstra');
-    expect(todos).toContain('dfs');
+    expect(todos).toHaveLength(0);
+    expect(todos).not.toContain('dfs');
+    expect(todos).not.toContain('dijkstra');
     expect(todos).not.toContain('greedy');
     expect(todos).not.toContain('hillclimb');
     expect(todos).not.toContain('annealing');

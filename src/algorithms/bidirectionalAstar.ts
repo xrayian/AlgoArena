@@ -34,42 +34,10 @@ import type {
   GridSnapshot,
   Point,
 } from './types';
-import { goalPoints, isGoal, nearestGoal, nearestGoalDist } from './utils';
+import { MinHeap } from './heap';
+import { goalPoints, isGoal, key, manhattan, nearestGoal, nearestGoalDist, neighbors } from './utils';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
-
-/** Encode a Point as a string key for Set/Map lookups. */
-function key(p: Point): string {
-  return `${p.x},${p.y}`;
-}
-
-/** Manhattan distance — consistent heuristic for 4-directional grids. */
-function manhattan(a: Point, b: Point): number {
-  return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
-}
-
-/** Cardinal neighbor offsets (no diagonals). */
-const DIRS: readonly Point[] = [
-  { x: 0, y: -1 },
-  { x: 1, y: 0 },
-  { x: 0, y: 1 },
-  { x: -1, y: 0 },
-];
-
-/** Return walkable cardinal neighbors of `p` within `grid`. */
-function neighbors(p: Point, grid: GridSnapshot): Point[] {
-  const result: Point[] = [];
-  for (const d of DIRS) {
-    const nx = p.x + d.x;
-    const ny = p.y + d.y;
-    if (nx >= 0 && nx < grid.width && ny >= 0 && ny < grid.height) {
-      if (!grid.walls.has(`${nx},${ny}`)) {
-        result.push({ x: nx, y: ny });
-      }
-    }
-  }
-  return result;
-}
 
 /**
  * Reconstruct the path from the origin of `cameFrom` to `current`.
@@ -101,7 +69,8 @@ function reconstructToward(cameFrom: Map<string, Point>, current: Point): Point[
   return path;
 }
 
-// ── Min-heap (binary heap) for the open sets ────────────────────────────────
+
+// ── Heap entry type ──────────────────────────────────────────────────────────
 
 interface HeapEntry {
   point: Point;
@@ -109,88 +78,10 @@ interface HeapEntry {
 }
 
 /**
- * Minimal binary min-heap ordered by `f` score.
- *
- * We roll our own rather than pulling in a library to keep the algorithms/
- * directory dependency-free (init.md §5: "smallest dependency that does the
- * job").
- */
-class MinHeap {
-  private data: HeapEntry[] = [];
-
-  get size(): number {
-    return this.data.length;
-  }
-
-  /** Read-only view of the heap entries for cut-boundary inspection. */
-  get entries(): readonly HeapEntry[] {
-    return this.data;
-  }
-
-  push(entry: HeapEntry): void {
-    this.data.push(entry);
-    this.bubbleUp(this.data.length - 1);
-  }
-
-  pop(): HeapEntry | undefined {
-    const top = this.data[0];
-    const last = this.data.pop();
-    if (this.data.length > 0 && last !== undefined) {
-      this.data[0] = last;
-      this.sinkDown(0);
-    }
-    return top;
-  }
-
-  /** Peek at the top entry in the heap without popping. */
-  peek(): HeapEntry | undefined {
-    return this.data[0];
-  }
-
-  /** Peek at the smallest f-value in the heap without popping. */
-  peekF(): number {
-    return this.data[0]?.f ?? Infinity;
-  }
-
-  private bubbleUp(i: number): void {
-    while (i > 0) {
-      const parent = (i - 1) >> 1;
-      if (this.data[i]!.f < this.data[parent]!.f) {
-        [this.data[i], this.data[parent]] = [this.data[parent]!, this.data[i]!];
-        i = parent;
-      } else {
-        break;
-      }
-    }
-  }
-
-  private sinkDown(i: number): void {
-    const n = this.data.length;
-    while (true) {
-      let smallest = i;
-      const left = 2 * i + 1;
-      const right = 2 * i + 2;
-      if (left < n && this.data[left]!.f < this.data[smallest]!.f) {
-        smallest = left;
-      }
-      if (right < n && this.data[right]!.f < this.data[smallest]!.f) {
-        smallest = right;
-      }
-      if (smallest !== i) {
-        [this.data[i], this.data[smallest]] = [this.data[smallest]!, this.data[i]!];
-        i = smallest;
-      } else {
-        break;
-      }
-    }
-  }
-}
-
-/**
  * Purge entries from the top of the heap that have already been closed.
- * Ensures heap.peekF() and heap.peek() always reflect true unclosed frontier nodes.
+ * Ensures heap.peekScore() and heap.peek() always reflect true unclosed frontier nodes.
  */
-function cleanHeap(heap: MinHeap, closed: Set<string>): void {
+function cleanHeap(heap: MinHeap<HeapEntry>, closed: Set<string>): void {
   while (heap.size > 0 && closed.has(key(heap.peek()!.point))) {
     heap.pop();
   }
@@ -210,7 +101,7 @@ function computePathCost(path: Point[], grid: GridSnapshot): number {
 
 interface GoalSearcher {
   goal: Point;
-  heap: MinHeap;
+  heap: MinHeap<HeapEntry>;
   gScore: Map<string, number>;
   cameFrom: Map<string, Point>;
   closed: Set<string>;
@@ -253,7 +144,7 @@ export function* bidirectionalAStar(
   }
 
   // ── Start side (A) ───────────────────────────────────────────────────────
-  const openA = new MinHeap();
+  const openA = new MinHeap<HeapEntry>((e) => e.f);
   const gA = new Map<string, number>();
   const cameFromA = new Map<string, Point>();
   const closedA = new Set<string>();
@@ -264,7 +155,7 @@ export function* bidirectionalAStar(
   // Each goal gets its own MinHeap, gScore, cameFrom, and closedSet so that
   // neither search branches nor predecessor paths collide between goals.
   const goalSearchers: GoalSearcher[] = goals.map((g) => {
-    const heap = new MinHeap();
+    const heap = new MinHeap<HeapEntry>((e) => e.f);
     const gScore = new Map<string, number>();
     const cameFrom = new Map<string, Point>();
     const closed = new Set<string>();
@@ -278,7 +169,7 @@ export function* bidirectionalAStar(
     for (let i = 0; i < goalSearchers.length; i++) {
       const s = goalSearchers[i]!;
       cleanHeap(s.heap, s.closed);
-      if (s.heap.size > 0 && s.heap.peekF() < bestCost) return true;
+      if (s.heap.size > 0 && s.heap.peekScore() < bestCost) return true;
     }
     return false;
   }
@@ -290,7 +181,7 @@ export function* bidirectionalAStar(
       const s = goalSearchers[i]!;
       cleanHeap(s.heap, s.closed);
       if (s.heap.size > 0) {
-        const f = s.heap.peekF();
+        const f = s.heap.peekScore();
         if (f < minF) minF = f;
       }
     }
@@ -333,7 +224,7 @@ export function* bidirectionalAStar(
     cleanHeap(openA, closedA);
 
     // Fast Path 1: Pohl's bound
-    const fA = openA.peekF();
+    const fA = openA.peekScore();
     const fB = minOpenBF();
     if (Math.max(fA, fB) >= bestCost) return true;
 

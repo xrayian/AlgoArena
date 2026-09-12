@@ -10,6 +10,8 @@
 import { describe, expect, it } from 'vitest';
 import { aStarSearch } from '../astar';
 import { breadthFirstSearch } from '../bfs';
+import { dijkstraFactory } from '../dijkstra';
+import { dfsFactory } from '../dfs';
 import { greedyBestFirstFactory } from '../greedyBestFirst';
 import { hillClimbingFactory } from '../hillClimbing';
 import { simulatedAnnealingSearch } from '../simulatedAnnealing';
@@ -26,10 +28,12 @@ import {
   runToCompletion,
 } from './fixtures';
 
-/** The seven implemented factories exercised by these tests. */
+/** The nine implemented factories exercised by these tests. */
 const IMPLEMENTED_FACTORIES = [
   { name: 'A*', factory: aStarSearch },
   { name: 'BFS', factory: breadthFirstSearch },
+  { name: 'Dijkstra', factory: dijkstraFactory },
+  { name: 'DFS', factory: dfsFactory },
   { name: 'Greedy Best-First', factory: greedyBestFirstFactory },
   { name: 'Hill Climbing', factory: hillClimbingFactory },
   { name: 'Simulated Annealing', factory: simulatedAnnealingSearch },
@@ -78,6 +82,13 @@ describe('multi-goal support', () => {
 
     it('BFS ends at the NEAREST goal (1, 0), not the primary goal (6, 3)', () => {
       const { result } = run(breadthFirstSearch, MULTI_GOAL_NEAREST);
+      expect(result.status).toBe('success');
+      expect(result.path).not.toBeNull();
+      expect(pathEndsAt(result.path!, { x: 1, y: 0 })).toBe(true);
+    });
+
+    it('Dijkstra ends at the NEAREST goal (1, 0), not the primary goal (6, 3)', () => {
+      const { result } = run(dijkstraFactory, MULTI_GOAL_NEAREST);
       expect(result.status).toBe('success');
       expect(result.path).not.toBeNull();
       expect(pathEndsAt(result.path!, { x: 1, y: 0 })).toBe(true);
