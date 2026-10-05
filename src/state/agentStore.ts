@@ -10,6 +10,7 @@
 
 import { create } from 'zustand';
 import type { AlgorithmResult, Point, StepEvent } from '../algorithms/types';
+import { getCodeTrace } from '../algorithms/codeTraces';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -47,6 +48,12 @@ export interface Agent {
   showOverlay: boolean;
   /** Live temperature for Simulated Annealing (undefined for other algorithms). */
   temperature?: number;
+
+  // ── Code trace state ──────────────────────────────────────────────────
+  /** Currently highlighted line number in the code trace inspector (1-indexed). */
+  activeLine: number | null;
+  /** Short human-readable explanation of what the algorithm is doing at this step. */
+  lineExplanation?: string;
 }
 
 export interface AgentState {
@@ -99,6 +106,7 @@ function createAgent(algorithmKey: string, color: string, start: Point): Agent {
     frontierNodes: [],
     currentPath: [],
     showOverlay: true,
+    activeLine: null,
   };
 }
 
@@ -162,10 +170,22 @@ export const useAgentStore = create<AgentState>((set) => ({
       agents: s.agents.map((a) => {
         if (a.id !== agentId) return a;
         const moved = a.position.x !== point.x || a.position.y !== point.y;
+
+        // Compute code trace runner phase line highlighting
+        const trace = getCodeTrace(a.algorithmKey);
+        const traceResult = trace?.mapRunner(
+          { position: a.position, currentPath: a.currentPath },
+          point,
+        );
+        const traceFields = traceResult
+          ? { activeLine: traceResult.lineNumber, lineExplanation: traceResult.explanation }
+          : {};
+
         return {
           ...a,
           position: { ...point },
           enteredAt: moved ? entryCounter++ : a.enteredAt,
+          ...traceFields,
         };
       }),
     })),
@@ -174,6 +194,16 @@ export const useAgentStore = create<AgentState>((set) => ({
     set((s) => ({
       agents: s.agents.map((a) => {
         if (a.id !== agentId) return a;
+
+        // Compute code trace line highlighting for this step
+        const trace = getCodeTrace(a.algorithmKey);
+        const traceResult = trace?.mapStep(event, {
+          position: a.position,
+          currentPath: a.currentPath,
+        });
+        const traceFields = traceResult
+          ? { activeLine: traceResult.lineNumber, lineExplanation: traceResult.explanation }
+          : {};
 
         switch (event.kind) {
           case 'consider': {
@@ -184,6 +214,7 @@ export const useAgentStore = create<AgentState>((set) => ({
                 heuristicTargetBackward: event.heuristicTarget
                   ? { ...event.heuristicTarget }
                   : undefined,
+                ...traceFields,
               };
             }
             return {
@@ -193,18 +224,19 @@ export const useAgentStore = create<AgentState>((set) => ({
                 ? { ...event.heuristicTarget }
                 : undefined,
               temperature: event.temperature,
+              ...traceFields,
             };
           }
           case 'visit': {
             const visited = new Set(a.visitedNodes);
             visited.add(`${event.node.x},${event.node.y}`);
-            return { ...a, visitedNodes: visited };
+            return { ...a, visitedNodes: visited, ...traceFields };
           }
           case 'frontier': {
-            return { ...a, frontierNodes: [...event.nodes] };
+            return { ...a, frontierNodes: [...event.nodes], ...traceFields };
           }
           case 'path': {
-            return { ...a, currentPath: [...event.path] };
+            return { ...a, currentPath: [...event.path], ...traceFields };
           }
           case 'done': {
             return {
@@ -212,6 +244,7 @@ export const useAgentStore = create<AgentState>((set) => ({
               status: 'done' as const,
               result: event.result,
               currentPath: event.result.path ? [...event.result.path] : [],
+              ...traceFields,
             };
           }
         }

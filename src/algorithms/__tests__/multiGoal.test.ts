@@ -17,6 +17,9 @@ import { hillClimbingFactory } from '../hillClimbing';
 import { simulatedAnnealingSearch } from '../simulatedAnnealing';
 import { bidirectionalBfsFactory } from '../bidirectionalBfs';
 import { bidirectionalAStarFactory } from '../bidirectionalAstar';
+import { bellmanFordFactory } from '../bellman_ford';
+import { floydWarshallFactory } from '../floyd_warshall';
+import { beamFactory } from '../beam';
 import type { AlgorithmResult, StepEvent } from '../types';
 import {
   MULTI_GOAL_OPEN,
@@ -28,7 +31,7 @@ import {
   runToCompletion,
 } from './fixtures';
 
-/** The nine implemented factories exercised by these tests. */
+/** The implemented factories exercised by these tests. */
 const IMPLEMENTED_FACTORIES = [
   { name: 'A*', factory: aStarSearch },
   { name: 'BFS', factory: breadthFirstSearch },
@@ -39,6 +42,9 @@ const IMPLEMENTED_FACTORIES = [
   { name: 'Simulated Annealing', factory: simulatedAnnealingSearch },
   { name: 'Bidirectional BFS', factory: bidirectionalBfsFactory },
   { name: 'Bidirectional A*', factory: bidirectionalAStarFactory },
+  { name: 'Bellman-Ford', factory: bellmanFordFactory },
+  { name: 'Floyd-Warshall', factory: floydWarshallFactory },
+  { name: 'Beam Search', factory: beamFactory },
 ] as const;
 
 function run(factory: (typeof IMPLEMENTED_FACTORIES)[number]['factory'], grid: Parameters<typeof aStarSearch>[0]) {

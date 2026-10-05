@@ -11,9 +11,9 @@ import { describe, it, expect } from 'vitest';
 import { ALGORITHMS, getImplementedAlgorithms, getTodoAlgorithms } from '../index';
 
 describe('Algorithm Registry', () => {
-  it('should contain all 9 algorithms', () => {
+  it('should contain all 12 algorithms', () => {
     const keys = Object.keys(ALGORITHMS);
-    expect(keys).toHaveLength(9);
+    expect(keys).toHaveLength(12);
     expect(keys).toContain('astar');
     expect(keys).toContain('bfs');
     expect(keys).toContain('dijkstra');
@@ -23,6 +23,9 @@ describe('Algorithm Registry', () => {
     expect(keys).toContain('annealing');
     expect(keys).toContain('bidir-bfs');
     expect(keys).toContain('bidir-astar');
+    expect(keys).toContain('bellman-ford');
+    expect(keys).toContain('floyd-warshall');
+    expect(keys).toContain('beam');
   });
 
   it('every entry should have label, color, factory, and implemented fields', () => {
@@ -37,7 +40,7 @@ describe('Algorithm Registry', () => {
   it('getImplementedAlgorithms should return only implemented ones', () => {
     const impl = getImplementedAlgorithms();
     const keys = Object.keys(impl);
-    expect(keys).toHaveLength(9);
+    expect(keys).toHaveLength(12);
     expect(keys).toContain('astar');
     expect(keys).toContain('bfs');
     expect(keys).toContain('greedy');
@@ -47,6 +50,9 @@ describe('Algorithm Registry', () => {
     expect(keys).toContain('annealing');
     expect(keys).toContain('dijkstra');
     expect(keys).toContain('dfs');
+    expect(keys).toContain('bellman-ford');
+    expect(keys).toContain('floyd-warshall');
+    expect(keys).toContain('beam');
   });
 
   it('getTodoAlgorithms should return unimplemented algorithm keys', () => {
@@ -61,6 +67,9 @@ describe('Algorithm Registry', () => {
     expect(todos).not.toContain('bfs');
     expect(todos).not.toContain('bidir-bfs');
     expect(todos).not.toContain('bidir-astar');
+    expect(todos).not.toContain('bellman-ford');
+    expect(todos).not.toContain('floyd-warshall');
+    expect(todos).not.toContain('beam');
   });
 
   it('all colors should be unique', () => {

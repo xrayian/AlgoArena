@@ -86,7 +86,7 @@ export function RacerDock() {
     playSnap();
   };
 
-  const handleRaceAll7 = () => {
+  const handleRaceAll = () => {
     agents.forEach((a) => removeAgent(a.id));
     Object.entries(ALGORITHMS).forEach(([key, entry]) => {
       addAgent(key, entry.color, start);
@@ -222,12 +222,12 @@ export function RacerDock() {
           {/* Quick Match Buttons */}
           <div className="flex items-center gap-1.5">
             <button
-              onClick={handleRaceAll7}
+              onClick={handleRaceAll}
               className="flex-1 flex items-center justify-center gap-1.5 py-1 px-2 rounded-lg bg-[#F2CD37] hover:bg-[#e0bc2c] border-2 border-[#05131D] text-[#05131D] text-xs font-bold shadow-[0_2px_0_#05131D] transition-transform active:translate-y-0.5 cursor-pointer"
-              title="Add all 7 algorithms to the grid"
+              title="Add all algorithms to the grid"
             >
               <Trophy size={13} />
-              <span>Race All 7</span>
+              <span>Race All {Object.keys(ALGORITHMS).length}</span>
             </button>
             <button
               onClick={handleQuickMatch}
@@ -355,7 +355,7 @@ export function RacerDock() {
             <Bot size={24} className="opacity-40" />
             <span className="text-xs font-bold font-sans">No racers placed</span>
             <span className="text-[10px] text-[#A3A2A4]">
-              Click &quot;Race All 7&quot; or add an algorithm above.
+              Click &quot;Race All {Object.keys(ALGORITHMS).length}&quot; or add an algorithm above.
             </span>
           </div>
         ) : showStandingsMode ? (

@@ -23,6 +23,9 @@ import { hillClimbingFactory } from './hillClimbing';
 import { simulatedAnnealingFactory } from './simulatedAnnealing';
 import { bidirectionalBfsFactory } from './bidirectionalBfs';
 import { bidirectionalAStarFactory } from './bidirectionalAstar';
+import { bellmanFordFactory } from './bellman_ford';
+import { floydWarshallFactory } from './floyd_warshall';
+import { beamFactory } from './beam';
 
 // Re-export types for convenience
 export type { AlgorithmFactory, AlgorithmGenerator, AlgorithmConfig } from './types';
@@ -55,6 +58,9 @@ export const ALGORITHMS: Record<string, AlgorithmEntry> = {
   annealing: { label: 'Simulated Annealing', color: '#36AEBF', factory: simulatedAnnealingFactory, implemented: true },
   'bidir-bfs': { label: 'Bidirectional BFS', color: '#E5A91E', factory: bidirectionalBfsFactory, implemented: true },
   'bidir-astar': { label: 'Bidirectional A*', color: '#9E1507', factory: bidirectionalAStarFactory, implemented: true },
+  'bellman-ford': { label: 'Bellman-Ford', color: '#5E35B1', factory: bellmanFordFactory, implemented: true },
+  'floyd-warshall': { label: 'Floyd-Warshall', color: '#00796B', factory: floydWarshallFactory, implemented: true },
+  beam:        { label: 'Beam Search',       color: '#00838F', factory: beamFactory,         implemented: true },
 } as const;
 
 /**
